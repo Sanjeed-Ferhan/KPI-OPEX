@@ -1,697 +1,437 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Production Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OPEX KPI Dashboard</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
 
-:root{
-  --navy:#0f1c35;
-  --navy2:#172340;
-  --navy3:#1d2d50;
-  --blue:#2a6fdb;
-  --blue2:#3b82f6;
-  --cyan:#06b6d4;
-  --green:#22c55e;
-  --green2:#16a34a;
-  --amber:#f59e0b;
-  --red:#ef4444;
-  --bg:#f0f4fa;
-  --surface:#ffffff;
-  --surface2:#f7f9fd;
-  --border:#dde4f0;
-  --text:#0f1c35;
-  --muted:#64748b;
-  --shadow:0 1px 3px rgba(15,28,53,.08),0 4px 16px rgba(15,28,53,.06);
-  --shadow-lg:0 4px 24px rgba(15,28,53,.12);
-}
+.header{background:#fff;border-bottom:1px solid #e5e5e3;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:sticky;top:0;z-index:10}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{width:36px;height:36px;background:#1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo span{color:#fff;font-weight:700;font-size:12px;letter-spacing:-0.5px}
+.header-title{font-size:15px;font-weight:600}
+.header-sub{font-size:11px;color:#888;margin-top:2px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.ctrl{display:flex;flex-direction:column;gap:3px}
+.ctrl-label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+select{padding:7px 30px 7px 10px;font-size:13px;font-weight:500;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color .15s}
+select:hover{border-color:#aaa}
+select:focus{outline:none;border-color:#555}
 
-html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.main{max-width:1100px;margin:0 auto;padding:20px}
 
-/* ── TOPBAR ── */
-.topbar{
-  background:var(--navy);
-  padding:0 24px;
-  height:54px;
-  display:flex;align-items:center;gap:12px;
-  position:sticky;top:0;z-index:200;
-}
-.logo-mark{
-  width:32px;height:32px;border-radius:8px;
-  background:linear-gradient(135deg,var(--blue) 0%,var(--cyan) 100%);
-  display:grid;place-items:center;flex-shrink:0;
-}
-.logo-mark svg{width:16px;height:16px;fill:white}
-.app-title{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:.02em}
-.app-title span{color:var(--cyan)}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.status-dot{
-  width:8px;height:8px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 0 3px rgba(34,197,94,.25);
-  animation:pulse 2s ease-in-out infinite;
-}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.25)}50%{box-shadow:0 0 0 6px rgba(34,197,94,.1)}}
-.status-text{font-size:.75rem;color:#94a3b8}
-#last-updated{font-size:.72rem;color:#64748b;background:rgba(255,255,255,.06);padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.1)}
+/* Setup panel */
+.setup-panel{background:#fffbeb;border:1px solid #f5e090;border-radius:10px;padding:20px 22px;margin-bottom:18px}
+.setup-panel h3{font-size:13px;font-weight:600;margin-bottom:10px;color:#92660a}
+.setup-panel ol{padding-left:18px;display:flex;flex-direction:column;gap:7px;font-size:12px;color:#6b5a2a;line-height:1.65}
+.setup-panel ol li strong{color:#1a1a1a}
+.setup-panel code{background:#fff8d6;border:1px solid #f0d060;border-radius:4px;padding:1px 6px;font-family:monospace;font-size:11px;color:#7a5500}
+.setup-panel .note{font-size:11px;color:#9a7a30;margin-top:10px;padding:8px 12px;background:#fff8d6;border-radius:6px}
+.dismiss-btn{margin-top:10px;padding:5px 14px;border:1px solid #d4aa40;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;color:#7a5500}
+.dismiss-btn:hover{background:#fffbeb}
 
-/* ── FILTERS BAR ── */
-.filters{
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  padding:14px 24px;
-  display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
-  box-shadow:0 2px 8px rgba(15,28,53,.05);
-}
-.fg{display:flex;flex-direction:column;gap:4px}
-.fg label{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
-.fg select,.fg input[type=date]{
-  padding:7px 10px;
-  border:1.5px solid var(--border);
-  border-radius:7px;
-  font-family:'DM Sans',sans-serif;
-  font-size:.875rem;
-  color:var(--text);
-  background:var(--surface2);
-  min-width:130px;
-  cursor:pointer;
-  transition:border-color .15s,box-shadow .15s;
-  appearance:auto;
-}
-.fg select:focus,.fg input[type=date]:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
-.filter-btns{display:flex;gap:8px;margin-left:auto}
-.btn{
-  padding:8px 16px;border:none;border-radius:7px;
-  font-family:'DM Sans',sans-serif;font-weight:600;font-size:.85rem;
-  cursor:pointer;display:flex;align-items:center;gap:6px;
-  transition:filter .15s,transform .1s;
-}
-.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
-.btn:active{transform:translateY(0)}
-.btn-reset{background:#e2e8f0;color:#475569}
-.btn-refresh{background:var(--blue);color:#fff}
-.btn-excel{background:var(--green2);color:#fff}
-.btn svg{width:14px;height:14px;fill:currentColor}
+.unit-bar{background:#fff;border:1px solid #e5e5e3;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.unit-name{font-size:14px;font-weight:600}
+.unit-meta{font-size:11px;color:#888;margin-top:2px}
+.month-pill{background:#f0f0ee;border-radius:99px;padding:4px 14px;font-size:12px;font-weight:500;color:#555}
 
-/* ── KPI STRIP ── */
-.kpi-strip{
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:1px;background:var(--border);
-  margin:20px 24px;
-  border-radius:12px;overflow:hidden;
-  box-shadow:var(--shadow);
-}
-.kpi{
-  background:var(--surface);
-  padding:18px 16px;
-  display:flex;flex-direction:column;gap:5px;
-  transition:background .15s;
-}
-.kpi:hover{background:#f0f6ff}
-.kpi-label{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
-.kpi-val{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--blue);line-height:1}
-.kpi-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.metric-card{background:#fff;border:1px solid #e5e5e3;border-radius:10px;padding:14px 15px}
+.m-label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.m-value{font-size:24px;font-weight:600;line-height:1.1;margin-bottom:3px}
+.m-sub{font-size:11px;color:#bbb}
 
-/* loading shimmer */
-.shimmer{
-  background:linear-gradient(90deg,#f0f4fa 25%,#e2e8f0 50%,#f0f4fa 75%);
-  background-size:200% 100%;
-  animation:shimmer 1.4s infinite;
-  border-radius:6px;height:32px;width:70%;
-}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.card{background:#fff;border:1px solid #e5e5e3;border-radius:10px;overflow:hidden;margin-bottom:16px}
+.card-head{padding:12px 18px;border-bottom:1px solid #f5f5f3;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#fafaf8}
+.card-title{font-size:13px;font-weight:600}
+.card-note{font-size:11px;color:#aaa}
 
-/* ── TABLE ── */
-.table-section{margin:0 24px 32px}
-.table-card{
-  background:var(--surface);
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:var(--shadow);
-  border:1px solid var(--border);
-}
-.table-header{
-  padding:14px 18px;
-  display:flex;align-items:center;justify-content:space-between;
-  border-bottom:1px solid var(--border);
-  background:var(--surface2);
-}
-.table-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--navy)}
-.row-count{font-size:.78rem;color:var(--muted);background:var(--bg);padding:3px 10px;border-radius:20px;border:1px solid var(--border)}
-.tscroll{overflow-x:auto;max-height:500px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;font-size:.8rem;white-space:nowrap}
-thead{position:sticky;top:0;z-index:10}
-thead tr{background:var(--navy)}
-th{
-  color:#e2e8f0;
-  font-family:'Syne',sans-serif;font-size:.68rem;font-weight:700;
-  letter-spacing:.07em;text-transform:uppercase;
-  padding:11px 13px;text-align:center;
-  border-right:1px solid rgba(255,255,255,.08);
-  cursor:pointer;user-select:none;
-  transition:background .1s;
-}
-th:hover{background:var(--navy3)}
-th.asc::after{content:' ▲';font-size:.6rem;opacity:.7}
-th.desc::after{content:' ▼';font-size:.6rem;opacity:.7}
-tbody tr{border-bottom:1px solid #eef2f9;transition:background .1s}
-tbody tr:nth-child(even){background:#fafbfd}
-tbody tr:hover{background:#eef5ff}
-td{padding:9px 13px;text-align:center;border-right:1px solid #f0f4fa}
-td:first-child{font-weight:500;color:var(--navy)}
+.legend{display:flex;gap:12px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:#888}
+.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
-.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-weight:700;font-size:.7rem}
-.badge-a{background:#dcfce7;color:#166534}
-.badge-b{background:#fef9c3;color:#854d0e}
-.badge-c{background:#fce7f3;color:#9d174d}
-.badge-d{background:#ede9fe;color:#4c1d95}
-.pct{font-weight:600}
-.good{color:#16a34a}.warn{color:#d97706}.bad{color:#dc2626}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 14px;color:#aaa;font-weight:500;border-bottom:1px solid #f0f0ee;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+td{padding:9px 14px;border-bottom:1px solid #f7f7f5;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#fafaf8}
+.kpi-name{font-weight:500;max-width:210px;word-break:break-word}
 
-/* footer / pagination */
-.tfoot{
-  padding:10px 16px;
-  display:flex;align-items:center;gap:6px;
-  border-top:1px solid var(--border);
-  background:var(--surface2);
-}
-.pinfo{font-size:.78rem;color:var(--muted);margin-right:auto}
-.pbtn{
-  padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;
-  background:var(--surface);color:var(--text);font-size:.78rem;
-  font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;
-}
-.pbtn:hover:not(:disabled){background:var(--blue);color:#fff;border-color:var(--blue)}
-.pbtn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.pbtn:disabled{opacity:.35;cursor:default}
+.badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:99px;font-weight:500;white-space:nowrap}
 
-/* ── LOADER OVERLAY ── */
-.loader{
-  position:fixed;inset:0;background:rgba(15,28,53,.55);
-  display:grid;place-items:center;z-index:999;
-  backdrop-filter:blur(3px);
-  transition:opacity .3s;
-}
-.loader.hidden{opacity:0;pointer-events:none}
-.spinner{
-  width:44px;height:44px;border:4px solid rgba(59,130,246,.2);
-  border-top-color:var(--blue2);border-radius:50%;
-  animation:spin .8s linear infinite;
-}
+.bar-wrap{display:flex;align-items:center;gap:8px}
+.bar-bg{flex:1;height:6px;background:#f0f0ee;border-radius:3px;overflow:hidden;min-width:50px}
+.bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.bar-pct{min-width:46px;font-size:11px;color:#aaa;text-align:right}
+
+.ov-wrap{padding:14px 18px;display:flex;flex-direction:column;gap:9px}
+.ov-row{display:grid;grid-template-columns:185px 1fr 54px;align-items:center;gap:10px}
+.ov-label{font-size:12px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-bg{height:8px;background:#f0f0ee;border-radius:4px;overflow:hidden}
+.ov-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.ov-pct{font-size:11px;color:#aaa;text-align:right}
+
+.state-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:44px 24px;gap:12px}
+.spinner{width:28px;height:28px;border:3px solid #f0f0ee;border-top-color:#999;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loader-text{color:#fff;font-family:'Syne',sans-serif;font-size:.85rem;margin-top:14px;text-align:center;opacity:.8}
+.state-icon{font-size:26px}
+.state-msg{font-size:13px;color:#888;text-align:center;max-width:380px;line-height:1.65}
+.state-hint{font-size:12px;color:#bbb;text-align:center;max-width:420px;line-height:1.65}
+.retry-btn{margin-top:4px;padding:7px 18px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;color:#555;transition:background .15s}
+.retry-btn:hover{background:#f5f5f3}
 
-/* ── ERROR BANNER ── */
-.error-banner{
-  margin:16px 24px;padding:14px 18px;
-  background:#fef2f2;border:1px solid #fecaca;border-radius:10px;
-  color:#991b1b;font-size:.85rem;display:none;align-items:center;gap:10px;
-}
-.error-banner.show{display:flex}
+.footer{text-align:center;padding:28px 20px;font-size:11px;color:#ccc}
 
-@media(max-width:900px){
-  .kpi-strip{grid-template-columns:repeat(3,1fr)}
-  .filter-btns{margin-left:0}
-  .filters{gap:8px}
-}
-@media(max-width:560px){
-  .kpi-strip{grid-template-columns:repeat(2,1fr)}
-  .kpi-val{font-size:1.4rem}
+@media(max-width:640px){
+  .header{flex-direction:column;align-items:flex-start}
+  .ov-row{grid-template-columns:110px 1fr 42px}
+  .kpi-name{max-width:130px}
 }
 </style>
 </head>
 <body>
 
-<!-- LOADER -->
-<div class="loader" id="loader">
-  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-    <div class="spinner"></div>
-    <div class="loader-text" id="loader-msg">Fetching live data from Google Sheets…</div>
-  </div>
-</div>
-
-<!-- TOPBAR -->
-<header class="topbar">
-  <div class="logo-mark">
-    <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-  </div>
-  <span class="app-title">Production <span>Dashboard</span></span>
-  <div class="topbar-right">
-    <div class="status-dot" id="status-dot" style="background:var(--amber)"></div>
-    <span class="status-text" id="status-text">Loading…</span>
-    <span id="last-updated">–</span>
-  </div>
-</header>
-
-<!-- ERROR BANNER -->
-<div class="error-banner" id="error-banner">
-  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-  <span id="error-msg">Could not load data.</span>
-  <button class="btn btn-refresh" style="margin-left:auto;padding:5px 12px;font-size:.78rem" onclick="loadData()">Retry</button>
-</div>
-
-<!-- FILTERS -->
-<div class="filters">
-  <div class="fg">
-    <label>SBU</label>
-    <select id="f-sbu"><option value="">Select All</option></select>
-  </div>
-  <div class="fg">
-    <label>Shop Floor</label>
-    <select id="f-shopfloor"><option value="">Select All</option></select>
-  </div>
-  <div class="fg">
-    <label>Mill Name</label>
-    <select id="f-mill"><option value="">Select All</option></select>
-  </div>
-  <div class="fg">
-    <label>Product</label>
-    <select id="f-product"><option value="">Select All</option></select>
-  </div>
-  <div class="fg">
-    <label>Shift</label>
-    <select id="f-shift"><option value="">Select All</option></select>
-  </div>
-  <div class="fg">
-    <label>From Date</label>
-    <input type="date" id="f-from">
-  </div>
-  <div class="fg">
-    <label>To Date</label>
-    <input type="date" id="f-to">
-  </div>
-  <div class="filter-btns">
-    <button class="btn btn-reset" onclick="resetFilters()">
-      <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4C7.58 4 4 7.58 4 12s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-      Reset
-    </button>
-    <button class="btn btn-refresh" onclick="loadData()">
-      <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4C7.58 4 4 7.58 4 12s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-      Refresh
-    </button>
-    <button class="btn btn-excel" onclick="exportCSV()">
-      <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-      Excel
-    </button>
-  </div>
-</div>
-
-<!-- KPI STRIP -->
-<div class="kpi-strip">
-  <div class="kpi"><div class="kpi-label">Total TGT O/P</div><div class="kpi-val" id="k-tgt"><div class="shimmer"></div></div><div class="kpi-sub">MT</div></div>
-  <div class="kpi"><div class="kpi-label">Total Actual O/P</div><div class="kpi-val" id="k-actual"><div class="shimmer"></div></div><div class="kpi-sub">MT</div></div>
-  <div class="kpi"><div class="kpi-label">Good Production</div><div class="kpi-val" id="k-good"><div class="shimmer"></div></div><div class="kpi-sub">MT</div></div>
-  <div class="kpi"><div class="kpi-label">Avg Achiv %</div><div class="kpi-val" id="k-achiv"><div class="shimmer"></div></div><div class="kpi-sub">Achievement</div></div>
-  <div class="kpi"><div class="kpi-label">Avg OEE %</div><div class="kpi-val" id="k-oee"><div class="shimmer"></div></div><div class="kpi-sub">Effectiveness</div></div>
-  <div class="kpi"><div class="kpi-label">Avg NPT %</div><div class="kpi-val" id="k-npt"><div class="shimmer"></div></div><div class="kpi-sub">Non-Productive Time</div></div>
-</div>
-
-<!-- TABLE -->
-<section class="table-section">
-  <div class="table-card">
-    <div class="table-header">
-      <span class="table-title">Production Report</span>
-      <span class="row-count" id="row-count">– rows</span>
-    </div>
-    <div class="tscroll">
-      <table>
-        <thead>
-          <tr id="thead-row">
-            <th data-col="Date" onclick="sortBy('Date')">Date</th>
-            <th data-col="Product Criteria" onclick="sortBy('Product Criteria')">Product</th>
-            <th data-col="Shift" onclick="sortBy('Shift')">Shift</th>
-            <th data-col="Mill Name" onclick="sortBy('Mill Name')">Mill Name</th>
-            <th data-col="Shift Target (MT)" onclick="sortBy('Shift Target (MT)')">TGT O/P</th>
-            <th data-col="Actual Output (MT)" onclick="sortBy('Actual Output (MT)')">Actual O/P</th>
-            <th data-col="Total Good Production (MT)" onclick="sortBy('Total Good Production (MT)')">Good Production</th>
-            <th data-col="Achievement %" onclick="sortBy('Achievement %')">Achiv%</th>
-            <th data-col="Wastage%" onclick="sortBy('Wastage%')">Wastage%</th>
-            <th data-col="Performance%" onclick="sortBy('Performance%')">Performance%</th>
-            <th data-col="Availability%" onclick="sortBy('Availability%')">Availability%</th>
-            <th data-col="Quality%" onclick="sortBy('Quality%')">Quality%</th>
-            <th data-col="OEE%" onclick="sortBy('OEE%')">OEE%</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <div class="tfoot">
-      <span class="pinfo" id="pinfo"></span>
-      <button class="pbtn" id="btn-prev" onclick="page(-1)">‹ Prev</button>
-      <span id="page-nums"></span>
-      <button class="pbtn" id="btn-next" onclick="page(1)">Next ›</button>
+<div class="header">
+  <div class="header-left">
+    <div class="logo"><span>KPI</span></div>
+    <div>
+      <div class="header-title">OPEX KPI Dashboard</div>
+      <div class="header-sub">Operations Excellence &nbsp;·&nbsp; Live from Google Sheets</div>
     </div>
   </div>
-</section>
+  <div class="controls">
+    <div class="ctrl">
+      <span class="ctrl-label">Business unit</span>
+      <select id="unit-sel" onchange="loadAndRender()">
+        <option value="AAFL">AAFL — Aman Agro Food Ltd</option>
+        <option value="MRML">MRML — MR Manufacturing Ltd</option>
+        <option value="AEFML">AEFML — AEF Manufacturing Ltd</option>
+        <option value="AIL">AIL — Aman Industries Ltd</option>
+        <option value="ACCL">ACCL — Aman Consumer Care Ltd</option>
+        <option value="APFIL">APFIL — AP Food Industries Ltd</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <span class="ctrl-label">Month</span>
+      <select id="month-sel" onchange="loadAndRender()">
+        <option value="Apr-26">Apr-26</option>
+        <option value="May-26">May-26</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="setup-panel" id="setup-panel">
+    <h3>⚙️ One-time setup required — connect your Google Sheets</h3>
+    <ol>
+      <li>Open each of the 6 Google Sheets &rarr; click <strong>Share</strong> &rarr; set access to <strong>"Anyone with the link — Viewer"</strong></li>
+      <li>Then go to <strong>File &rarr; Share &rarr; Publish to web</strong> &rarr; click <strong>Publish</strong> (publish the whole document)</li>
+      <li>Do this for all 6 sheets: <code>AAFL</code> <code>MRML</code> <code>AEFML</code> <code>AIL</code> <code>ACCL</code> <code>APFIL</code></li>
+      <li>The Sheet IDs are already embedded in this file — no other changes needed</li>
+    </ol>
+    <div class="note">ℹ️ Uses Google's free <code>gviz/tq</code> API — no API key or backend needed. Data refreshes live on every dropdown change or page reload.</div>
+    <button class="dismiss-btn" onclick="document.getElementById('setup-panel').style.display='none'">Got it, dismiss</button>
+  </div>
+
+  <div class="unit-bar">
+    <div>
+      <div class="unit-name" id="unit-name-el">—</div>
+      <div class="unit-meta">Section: OPEX &nbsp;·&nbsp; Department: Operations</div>
+    </div>
+    <div class="month-pill" id="month-pill-el">—</div>
+  </div>
+
+  <div class="metric-grid" id="metric-row">
+    <div class="metric-card"><div class="m-label">Status</div><div class="m-value" style="font-size:14px;color:#aaa">Loading…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title" id="tbl-title">KPI details</span>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div id="tbl-content">
+      <div class="state-box"><div class="spinner"></div><div class="state-msg">Fetching live data from Google Sheets…</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">Achievement overview</span>
+      <span class="card-note">Capped at 200% &nbsp;·&nbsp; green ≥100% &nbsp;·&nbsp; blue ≥80% &nbsp;·&nbsp; amber ≥50% &nbsp;·&nbsp; red &lt;50%</span>
+    </div>
+    <div id="ov-chart">
+      <div class="state-box" style="padding:24px"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  OPEX KPI Dashboard &nbsp;·&nbsp; Data sourced live from Google Sheets &nbsp;·&nbsp; Refreshes on every load &nbsp;·&nbsp; &copy; 2026
+</div>
 
 <script>
-// ─────────────────────────────────────────────────────────────────
-//  CONFIG  ← Only this section needs updating if the sheet changes
-// ─────────────────────────────────────────────────────────────────
-const CONFIG = {
-  // Your Google Sheet ID (from the URL)
-  SHEET_ID: '17isMrQuxVMbFjsL8sIiB6iwm3xRTr-4gELPxZmPeOTQ',
-  // The exact tab name you want to read from
-  SHEET_TAB: 'Production Report.',
-  // How often to auto-refresh (ms). 0 = disabled
-  AUTO_REFRESH_MS: 5 * 60 * 1000, // 5 minutes
-  // Rows per page
-  PAGE_SIZE: 20,
+// ─────────────────────────────────────────────────────────
+// CONFIGURATION — Sheet IDs + tab names
+// Tab names must match EXACTLY what you see in Google Sheets
+// ─────────────────────────────────────────────────────────
+const SHEETS = {
+  AAFL:  { id: "1OrM5NnsZXGcvKaqltg0t5ML_cY4-aGPaj9EwJEuxs4Q", full: "Aman Agro Food Ltd",     tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
+  MRML:  { id: "1oFVT9nMTE1EXkDy6IhDRQVuJ9ls7N28byqxXpFnn5TI", full: "MR Manufacturing Ltd",   tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
+  AEFML: { id: "1aUTyOsjSSBTb9beoqpN5Xu-thRtoNvpnn-AQeHc0U30", full: "AEF Manufacturing Ltd",  tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
+  AIL:   { id: "1Iv0dAUnRN2g0A8oipGPAoU4zFt8mszQJI0e-moC0Mjc", full: "Aman Industries Ltd",    tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
+  ACCL:  { id: "1sxPtwkNHXxrstIqn9Hr-EFtt8yMN6EGLY1_vNSEEWNQ", full: "Aman Consumer Care Ltd", tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
+  APFIL: { id: "1dNmSqSGVNAjQs0en9Xzuzeg2ykBp5Jp8uc1nEyTbc5c", full: "AP Food Industries Ltd", tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
 };
 
-// Build the public CSV export URL (sheet must be "Anyone with link can view")
-const csvUrl = () =>
-  `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.SHEET_TAB)}`;
+// ─────────────────────────────────────────────────────────
+// COLUMN MAPPING (0-based index matching your sheet layout)
+// H=7 KPI Name, I=8 Measure, L=11 Target, M=12 Actual,
+// N=13 Achievement, O=14 Status
+// ─────────────────────────────────────────────────────────
+const COL = { NAME:7, MEASURE:8, TARGET:11, ACTUAL:12, ACHIEVEMENT:13, STATUS:14 };
 
-// ─── State ───────────────────────────────────────────────────────
-let allRows = [];       // full parsed dataset
-let filtered = [];     // after filters
-let sortCol = 'Date';
-let sortDir = 1;       // 1 asc, -1 desc
-let currentPage = 1;
-
-// ─── CSV Parser ───────────────────────────────────────────────────
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  const headers = splitCSVLine(lines[0]);
-  return lines.slice(1).map(line => {
-    const vals = splitCSVLine(line);
-    const obj = {};
-    headers.forEach((h, i) => obj[h.trim()] = (vals[i] || '').trim());
-    return obj;
-  }).filter(r => r['SBU'] && r['SBU'] !== 'SBU'); // skip empty / repeat header rows
+// ─────────────────────────────────────────────────────────
+// Data fetching
+// ─────────────────────────────────────────────────────────
+function gvizUrl(sheetId, tabName) {
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}&headers=1`;
 }
 
-function splitCSVLine(line) {
+function parseGviz(raw) {
+  const match = raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);\s*$/);
+  if (!match) throw new Error("Could not parse Google Sheets response. Is the sheet published?");
+  return JSON.parse(match[1]);
+}
+
+function cellVal(cell) {
+  if (!cell || cell.v === null || cell.v === undefined) return "";
+  return cell.f !== undefined ? String(cell.f) : String(cell.v);
+}
+
+function cleanStatus(raw) {
+  const r = raw.toLowerCase();
+  if (r.includes("excellent"))  return "Excellent";
+  if (r.includes("acceptable")) return "Acceptable";
+  if (r.includes("risk"))       return "Risk";
+  if (r.includes("critical"))   return "Critical";
+  return "";
+}
+
+function parsePct(str) {
+  if (!str) return 0;
+  const cleaned = str.replace(/[%,\s]/g, "");
+  if (!cleaned || cleaned.includes("#") || cleaned === "—") return 0;
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : Math.abs(n);
+}
+
+function parseRows(gvizData) {
+  const rows = gvizData.table && gvizData.table.rows ? gvizData.table.rows : [];
   const result = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') {
-      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
-      else inQ = !inQ;
-    } else if (c === ',' && !inQ) {
-      result.push(cur); cur = '';
-    } else {
-      cur += c;
-    }
+  for (const row of rows) {
+    if (!row.c || row.c.length < 15) continue;
+    const name = cellVal(row.c[COL.NAME]).trim();
+    if (!name || name.toLowerCase() === "kpi name" || name.toLowerCase() === "kpi") continue;
+    const statusRaw = cellVal(row.c[COL.STATUS]).trim();
+    const status = cleanStatus(statusRaw);
+    if (!status) continue;
+    const actual = cellVal(row.c[COL.ACTUAL]).trim();
+    const pct    = parsePct(cellVal(row.c[COL.ACHIEVEMENT]).trim());
+    result.push({
+      n: name,
+      m: cellVal(row.c[COL.MEASURE]).trim() || "—",
+      t: cellVal(row.c[COL.TARGET]).trim()  || "—",
+      a: actual || "—",
+      p: pct,
+      s: status
+    });
   }
-  result.push(cur);
   return result;
 }
 
-// ─── Load Data ───────────────────────────────────────────────────
-async function loadData() {
-  showLoader('Fetching live data from Google Sheets…');
-  hideError();
-
-  try {
-    const url = csvUrl();
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    if (!text || text.trim().length < 10) throw new Error('Empty response from sheet');
-
-    allRows = parseCSV(text);
-    if (allRows.length === 0) throw new Error('No data rows found in "' + CONFIG.SHEET_TAB + '"');
-
-    populateFilters();
-    applyFilters();
-    updateStatus('Live', true);
-    hideLoader();
-
-    const now = new Date();
-    document.getElementById('last-updated').textContent =
-      'Updated ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-
-  } catch (err) {
-    hideLoader();
-    showError('Failed to load: ' + err.message + '. Make sure the sheet is shared as "Anyone with link can view".');
-    updateStatus('Error', false);
-    console.error(err);
+async function fetchSheetData(unit, month) {
+  const cfg = SHEETS[unit];
+  if (!cfg) throw new Error("Unknown unit: " + unit);
+  const tabName = cfg.tabs[month];
+  if (!tabName) throw new Error("No tab configured for: " + month);
+  const url = gvizUrl(cfg.id, tabName);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Network error HTTP ${res.status}`);
+  const raw = await res.text();
+  const data = parseGviz(raw);
+  if (data.status === "error") {
+    const msg = data.errors && data.errors[0] ? data.errors[0].detailed_message : "Sheet access error";
+    throw new Error(msg);
   }
+  return parseRows(data);
 }
 
-// ─── Filters ─────────────────────────────────────────────────────
-function populateFilters() {
-  const unique = (key) => [...new Set(allRows.map(r => r[key]).filter(Boolean))].sort();
-
-  fillSelect('f-sbu',       unique('SBU'));
-  fillSelect('f-shopfloor', unique('Shift Name'));
-  fillSelect('f-mill',      unique('Mill Name'));
-  fillSelect('f-product',   unique('Product Criteria'));
-  fillSelect('f-shift',     unique('Shift'));
+// ─────────────────────────────────────────────────────────
+// Styling helpers
+// ─────────────────────────────────────────────────────────
+function statusStyle(s) {
+  if (s === "Excellent")  return { c:"#22863a", bg:"#EAF3DE" };
+  if (s === "Acceptable") return { c:"#185FA5", bg:"#E6F1FB" };
+  if (s === "Risk")       return { c:"#854F0B", bg:"#FAEEDA" };
+  return                         { c:"#A32D2D", bg:"#FCEBEB" };
 }
 
-function fillSelect(id, options) {
-  const sel = document.getElementById(id);
-  const prev = sel.value;
-  while (sel.options.length > 1) sel.remove(1);
-  options.forEach(v => {
-    const o = document.createElement('option');
-    o.value = o.textContent = v;
-    sel.appendChild(o);
-  });
-  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+function barColor(p) {
+  if (p >= 100) return "#22863a";
+  if (p >= 80)  return "#185FA5";
+  if (p >= 50)  return "#EF9F27";
+  return "#E24B4A";
 }
 
-function applyFilters() {
-  const sbu      = v('f-sbu');
-  const shop     = v('f-shopfloor');
-  const mill     = v('f-mill');
-  const product  = v('f-product');
-  const shift    = v('f-shift');
-  const fromDate = v('f-from');
-  const toDate   = v('f-to');
-
-  filtered = allRows.filter(r => {
-    if (sbu     && r['SBU']              !== sbu)     return false;
-    if (shop    && r['Shift Name']        !== shop)    return false;
-    if (mill    && r['Mill Name']         !== mill)    return false;
-    if (product && r['Product Criteria']  !== product) return false;
-    if (shift   && r['Shift']             !== shift)   return false;
-    if (fromDate || toDate) {
-      const d = parseDate(r['Date']);
-      if (fromDate && d < new Date(fromDate)) return false;
-      if (toDate   && d > new Date(toDate))   return false;
-    }
-    return true;
-  });
-
-  filtered.sort((a, b) => {
-    let av = a[sortCol] || '', bv = b[sortCol] || '';
-    const an = parseFloat(av.replace(/[%,]/g, '')), bn = parseFloat(bv.replace(/[%,]/g, ''));
-    if (!isNaN(an) && !isNaN(bn)) return sortDir * (an - bn);
-    return sortDir * av.localeCompare(bv);
-  });
-
-  currentPage = 1;
-  updateKPIs();
-  renderTable();
+function fmtPct(p, a) {
+  if (p === 0 && (a === "—" || a === "")) return "—";
+  return p.toFixed(1) + "%";
 }
 
-function v(id) { return document.getElementById(id).value; }
+// ─────────────────────────────────────────────────────────
+// Render functions
+// ─────────────────────────────────────────────────────────
+function renderMetrics(kpis) {
+  const exc  = kpis.filter(k => k.s === "Excellent").length;
+  const acc  = kpis.filter(k => k.s === "Acceptable").length;
+  const risk = kpis.filter(k => k.s === "Risk").length;
+  const crit = kpis.filter(k => k.s === "Critical").length;
+  const total = kpis.length || 1;
+  const avg = kpis.reduce((a,k) => a + Math.min(k.p, 200), 0) / kpis.length || 0;
 
-function parseDate(s) {
-  if (!s) return new Date(0);
-  const p = s.split('/');
-  if (p.length === 3) return new Date(p[2], p[0]-1, p[1]);
-  return new Date(s);
+  document.getElementById("metric-row").innerHTML = `
+    <div class="metric-card"><div class="m-label">Total KPIs</div><div class="m-value">${kpis.length}</div><div class="m-sub">tracked this month</div></div>
+    <div class="metric-card"><div class="m-label">Excellent</div><div class="m-value" style="color:#22863a">${exc}</div><div class="m-sub">${Math.round(exc/total*100)}% of KPIs</div></div>
+    <div class="metric-card"><div class="m-label">Acceptable</div><div class="m-value" style="color:#185FA5">${acc}</div><div class="m-sub">${Math.round(acc/total*100)}% of KPIs</div></div>
+    <div class="metric-card"><div class="m-label">Risk</div><div class="m-value" style="color:#854F0B">${risk}</div><div class="m-sub">${Math.round(risk/total*100)}% of KPIs</div></div>
+    <div class="metric-card"><div class="m-label">Critical</div><div class="m-value" style="color:#A32D2D">${crit}</div><div class="m-sub">${Math.round(crit/total*100)}% of KPIs</div></div>
+    <div class="metric-card"><div class="m-label">Avg. achievement</div><div class="m-value">${avg.toFixed(1)}%</div><div class="m-sub">capped at 200%</div></div>
+  `;
+
+  const statuses = ["Excellent","Acceptable","Risk","Critical"];
+  const counts   = [exc, acc, risk, crit];
+  const colors   = ["#22863a","#185FA5","#854F0B","#A32D2D"];
+  document.getElementById("legend").innerHTML = statuses.map((s,i) =>
+    `<span class="leg-item"><span class="leg-dot" style="background:${colors[i]}"></span>${s} (${counts[i]})</span>`
+  ).join("");
 }
 
-function resetFilters() {
-  ['f-sbu','f-shopfloor','f-mill','f-product','f-shift'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-from').value = '';
-  document.getElementById('f-to').value = '';
-  applyFilters();
-}
-
-// ─── KPIs ─────────────────────────────────────────────────────────
-function updateKPIs() {
-  const num = (v, fallback=0) => {
-    const n = parseFloat((v||'').replace(/[%,]/g,''));
-    return isNaN(n) ? fallback : n;
-  };
-  const rows = filtered;
-  if (!rows.length) {
-    ['k-tgt','k-actual','k-good','k-achiv','k-oee','k-npt'].forEach(id =>
-      document.getElementById(id).textContent = '0');
+function renderTable(kpis) {
+  if (!kpis.length) {
+    document.getElementById("tbl-content").innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">📭</div>
+        <div class="state-msg">No KPI data found in this tab.</div>
+        <div class="state-hint">Verify that the tab name matches exactly (e.g. "Apr-26") and that data exists in the expected columns (H through O).</div>
+      </div>`;
     return;
   }
+  const rows = kpis.map(k => {
+    const {c, bg} = statusStyle(k.s);
+    const w = Math.min(k.p, 200) / 2;
+    return `<tr>
+      <td class="kpi-name">${k.n}</td>
+      <td style="color:#aaa;white-space:nowrap">${k.m}</td>
+      <td style="white-space:nowrap">${k.t}</td>
+      <td style="white-space:nowrap">${k.a}</td>
+      <td>
+        <div class="bar-wrap">
+          <div class="bar-bg"><div class="bar-fill" style="width:${w}%;background:${barColor(k.p)}"></div></div>
+          <span class="bar-pct">${fmtPct(k.p, k.a)}</span>
+        </div>
+      </td>
+      <td><span class="badge" style="background:${bg};color:${c}">${k.s}</span></td>
+    </tr>`;
+  }).join("");
 
-  const tgt     = rows.reduce((s,r) => s + num(r['Shift Target (MT)']), 0);
-  const actual  = rows.reduce((s,r) => s + num(r['Actual Output (MT)']), 0);
-  const good    = rows.reduce((s,r) => s + num(r['Total Good Production (MT)']), 0);
-
-  const achivRows = rows.filter(r => r['Achievement %']);
-  const oeeRows   = rows.filter(r => r['OEE%']);
-  const nptRows   = rows.filter(r => r['NPT%']);
-
-  const avgAchiv = achivRows.length ? achivRows.reduce((s,r) => s + num(r['Achievement %']), 0) / achivRows.length : 0;
-  const avgOEE   = oeeRows.length   ? oeeRows.reduce((s,r)   => s + num(r['OEE%']), 0)           / oeeRows.length   : 0;
-  const avgNPT   = nptRows.length   ? nptRows.reduce((s,r)   => s + num(r['NPT%']), 0)           / nptRows.length   : 0;
-
-  document.getElementById('k-tgt').textContent    = fmt(tgt);
-  document.getElementById('k-actual').textContent = fmt(actual);
-  document.getElementById('k-good').textContent   = fmt(good);
-  document.getElementById('k-achiv').textContent  = avgAchiv.toFixed(1) + '%';
-  document.getElementById('k-oee').textContent    = avgOEE.toFixed(1)   + '%';
-  document.getElementById('k-npt').textContent    = avgNPT.toFixed(1)   + '%';
-
-  colorKPI('k-achiv', avgAchiv, 90, 75);
-  colorKPI('k-oee',   avgOEE,   80, 60);
-  colorKPI('k-npt',   avgNPT,   5,  15, true);
+  document.getElementById("tbl-content").innerHTML = `
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>KPI name</th><th>Measure</th><th>Target</th><th>Actual</th>
+          <th style="min-width:150px">Achievement</th><th>Status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 }
 
-function fmt(n) {
-  return n >= 1000 ? (n/1000).toFixed(1) + 'k' : n.toFixed(0);
+function renderOverview(kpis) {
+  if (!kpis.length) {
+    document.getElementById("ov-chart").innerHTML = `<div class="state-box" style="padding:20px"><div class="state-msg">No data available</div></div>`;
+    return;
+  }
+  document.getElementById("ov-chart").innerHTML = `<div class="ov-wrap">` + kpis.map(k => {
+    const w = Math.min(k.p, 200) / 2;
+    return `<div class="ov-row">
+      <span class="ov-label" title="${k.n}">${k.n}</span>
+      <div class="ov-bg"><div class="ov-fill" style="width:${w}%;background:${barColor(k.p)}"></div></div>
+      <span class="ov-pct">${fmtPct(k.p, k.a)}</span>
+    </div>`;
+  }).join("") + `</div>`;
 }
 
-function colorKPI(id, val, good, warn, invert=false) {
-  const el = document.getElementById(id);
-  el.className = 'kpi-val';
-  if (invert) {
-    el.style.color = val <= good ? 'var(--green)' : val <= warn ? 'var(--amber)' : 'var(--red)';
-  } else {
-    el.style.color = val >= good ? 'var(--green)' : val >= warn ? 'var(--amber)' : 'var(--red)';
+function renderError(err) {
+  const isAccess = !err.message || err.message.includes("access") || err.message.includes("403") || err.message.includes("parse") || err.message.includes("published");
+  const hint = isAccess
+    ? `Make sure each sheet is: (1) shared as <strong>"Anyone with the link — Viewer"</strong>, and (2) published via <strong>File → Share → Publish to web</strong>.`
+    : `Details: ${err.message}`;
+
+  document.getElementById("tbl-content").innerHTML = `
+    <div class="state-box">
+      <div class="state-icon">⚠️</div>
+      <div class="state-msg">Could not load data from Google Sheets</div>
+      <div class="state-hint">${hint}</div>
+      <button class="retry-btn" onclick="loadAndRender()">↺ Retry</button>
+    </div>`;
+  document.getElementById("ov-chart").innerHTML = `<div class="state-box" style="padding:20px"><div class="state-msg" style="font-size:12px;color:#ccc">See error above</div></div>`;
+  document.getElementById("metric-row").innerHTML = `<div class="metric-card"><div class="m-label">Status</div><div class="m-value" style="font-size:13px;color:#A32D2D">Load failed</div><div class="m-sub">Check sheet permissions</div></div>`;
+}
+
+function setLoading() {
+  document.getElementById("tbl-content").innerHTML = `<div class="state-box"><div class="spinner"></div><div class="state-msg">Fetching live data from Google Sheets…</div></div>`;
+  document.getElementById("ov-chart").innerHTML    = `<div class="state-box" style="padding:24px"><div class="spinner"></div></div>`;
+  document.getElementById("metric-row").innerHTML  = `<div class="metric-card"><div class="m-label">Status</div><div class="m-value" style="font-size:14px;color:#aaa">Loading…</div></div>`;
+  document.getElementById("legend").innerHTML = "";
+}
+
+// ─────────────────────────────────────────────────────────
+// Main entry point
+// ─────────────────────────────────────────────────────────
+async function loadAndRender() {
+  const unit  = document.getElementById("unit-sel").value;
+  const month = document.getElementById("month-sel").value;
+  const cfg   = SHEETS[unit];
+
+  document.getElementById("unit-name-el").textContent = cfg ? cfg.full : unit;
+  document.getElementById("month-pill-el").textContent = month;
+  document.getElementById("tbl-title").textContent = `${unit} — ${month} KPI details`;
+
+  setLoading();
+
+  try {
+    const kpis = await fetchSheetData(unit, month);
+    renderMetrics(kpis);
+    renderTable(kpis);
+    renderOverview(kpis);
+    // Hide setup panel once data loads successfully
+    document.getElementById("setup-panel").style.display = "none";
+  } catch(err) {
+    console.error("[OPEX Dashboard]", err);
+    renderError(err);
   }
 }
 
-// ─── Table Render ─────────────────────────────────────────────────
-function renderTable() {
-  const start  = (currentPage - 1) * CONFIG.PAGE_SIZE;
-  const end    = start + CONFIG.PAGE_SIZE;
-  const page   = filtered.slice(start, end);
-  const tbody  = document.getElementById('tbody');
-
-  document.getElementById('row-count').textContent = filtered.length + ' rows';
-
-  tbody.innerHTML = page.length
-    ? page.map(r => `
-      <tr>
-        <td>${r['Date']||'–'}</td>
-        <td><strong>${r['Product Criteria']||'–'}</strong></td>
-        <td><span class="badge badge-${(r['Shift']||'').toLowerCase()}">${r['Shift']||'–'}</span></td>
-        <td>${r['Mill Name']||'–'}</td>
-        <td>${r['Shift Target (MT)']||'–'}</td>
-        <td>${r['Actual Output (MT)']||'–'}</td>
-        <td><strong>${r['Total Good Production (MT)']||'–'}</strong></td>
-        <td class="pct ${pctClass(r['Achievement %'])}">${r['Achievement %']||'–'}</td>
-        <td class="pct ${pctClass(r['Wastage%'], true)}">${r['Wastage%']||'–'}</td>
-        <td class="pct ${pctClass(r['Performance%'])}">${r['Performance%']||'–'}</td>
-        <td class="pct ${pctClass(r['Availability%'])}">${r['Availability%']||'–'}</td>
-        <td class="pct ${pctClass(r['Quality%'])}">${r['Quality%']||'–'}</td>
-        <td class="pct ${pctClass(r['OEE%'])}">${r['OEE%']||'–'}</td>
-      </tr>`).join('')
-    : '<tr><td colspan="13" style="padding:50px;color:var(--muted)">No data matches the selected filters.</td></tr>';
-
-  renderPagination();
-}
-
-function pctClass(val, invert=false) {
-  const n = parseFloat((val||'').replace('%',''));
-  if (isNaN(n)) return '';
-  if (invert) return n <= 3.5 ? 'good' : n <= 5 ? 'warn' : 'bad';
-  return n >= 90 ? 'good' : n >= 70 ? 'warn' : 'bad';
-}
-
-// ─── Sort ─────────────────────────────────────────────────────────
-function sortBy(col) {
-  if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
-  document.querySelectorAll('th').forEach(th => {
-    th.classList.remove('asc','desc');
-    if (th.dataset.col === col) th.classList.add(sortDir === 1 ? 'asc' : 'desc');
-  });
-  applyFilters();
-}
-
-// ─── Pagination ───────────────────────────────────────────────────
-function renderPagination() {
-  const total  = Math.ceil(filtered.length / CONFIG.PAGE_SIZE) || 1;
-  const start  = (currentPage - 1) * CONFIG.PAGE_SIZE + 1;
-  const end    = Math.min(currentPage * CONFIG.PAGE_SIZE, filtered.length);
-  document.getElementById('pinfo').textContent =
-    filtered.length ? `Showing ${start}–${end} of ${filtered.length}` : '';
-  document.getElementById('btn-prev').disabled = currentPage === 1;
-  document.getElementById('btn-next').disabled = currentPage >= total;
-
-  const nums = document.getElementById('page-nums');
-  nums.innerHTML = '';
-  const pages = pageRange(currentPage, total);
-  pages.forEach(p => {
-    if (p === '…') {
-      const s = document.createElement('span');
-      s.textContent = '…'; s.style.cssText = 'padding:0 4px;color:var(--muted)';
-      nums.appendChild(s);
-    } else {
-      const b = document.createElement('button');
-      b.textContent = p; b.className = 'pbtn' + (p === currentPage ? ' active' : '');
-      b.onclick = () => { currentPage = p; renderTable(); };
-      nums.appendChild(b);
-    }
-  });
-}
-
-function page(dir) { currentPage += dir; renderTable(); }
-
-function pageRange(cur, total) {
-  if (total <= 7) return Array.from({length:total},(_,i)=>i+1);
-  if (cur <= 4)   return [1,2,3,4,5,'…',total];
-  if (cur >= total-3) return [1,'…',total-4,total-3,total-2,total-1,total];
-  return [1,'…',cur-1,cur,cur+1,'…',total];
-}
-
-// ─── Export CSV ───────────────────────────────────────────────────
-function exportCSV() {
-  if (!filtered.length) return;
-  const cols = ['Date','Product Criteria','Shift','Mill Name','Shift Target (MT)',
-    'Actual Output (MT)','Total Good Production (MT)','Achievement %','Wastage%',
-    'Performance%','Availability%','Quality%','OEE%','NPT%'];
-  const rows = [cols.join(','), ...filtered.map(r =>
-    cols.map(c => `"${(r[c]||'').replace(/"/g,'""')}"`).join(','))];
-  const blob = new Blob([rows.join('\n')], {type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `production_report_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-}
-
-// ─── UI helpers ───────────────────────────────────────────────────
-function showLoader(msg) {
-  document.getElementById('loader').classList.remove('hidden');
-  document.getElementById('loader-msg').textContent = msg;
-}
-function hideLoader() { document.getElementById('loader').classList.add('hidden'); }
-function showError(msg) {
-  const b = document.getElementById('error-banner');
-  document.getElementById('error-msg').textContent = msg;
-  b.classList.add('show');
-}
-function hideError() { document.getElementById('error-banner').classList.remove('show'); }
-function updateStatus(label, ok) {
-  document.getElementById('status-dot').style.background = ok ? 'var(--green)' : 'var(--red)';
-  document.getElementById('status-text').textContent = label;
-}
-
-// ─── Wire up filter change events ─────────────────────────────────
-['f-sbu','f-shopfloor','f-mill','f-product','f-shift','f-from','f-to'].forEach(id =>
-  document.getElementById(id).addEventListener('change', applyFilters));
-
-// ─── Auto refresh ─────────────────────────────────────────────────
-if (CONFIG.AUTO_REFRESH_MS > 0) {
-  setInterval(() => {
-    console.log('[Dashboard] Auto-refreshing data…');
-    loadData();
-  }, CONFIG.AUTO_REFRESH_MS);
-}
-
-// ─── Boot ─────────────────────────────────────────────────────────
-loadData();
+// Boot
+loadAndRender();
 </script>
 </body>
 </html>

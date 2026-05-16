@@ -184,8 +184,8 @@ tbody tr:hover td{background:#fafaf8}
 // ─────────────────────────────────────────────────────────
 const SHEETS = {
   AAFL:  { id: "1OrM5NnsZXGcvKaqltg0t5ML_cY4-aGPaj9EwJEuxs4Q", full: "Akij Agro Feed Ltd",     tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
-  MRML:  { id: "1oFVT9nMTE1EXkDy6IhDRQVuJ9ls7N28byqxXpFnn5TI", full: "Monoara Rice Mill Ltd",   tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
-  AEFML: { id: "1aUTyOsjSSBTb9beoqpN5Xu-thRtoNvpnn-AQeHc0U30", full: "Akij Essential Flour Mill Ltd",  tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
+  MRML:  { id: "1oFVT9nMTE1EXkDy6IhDRQVuJ9ls7N28byqxXpFnn5TI", full: "Monowara Rice Mill Ltd",   tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
+  AEFML: { id: "1aUTyOsjSSBTb9beoqpN5Xu-thRtoNvpnn-AQeHc0U30", full: "Akij Essential FLour Mill Ltd",  tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
   AIL:   { id: "1Iv0dAUnRN2g0A8oipGPAoU4zFt8mszQJI0e-moC0Mjc", full: "Akij Ispat Ltd",    tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
   ACCL:  { id: "1sxPtwkNHXxrstIqn9Hr-EFtt8yMN6EGLY1_vNSEEWNQ", full: "Akij Cement Company Ltd", tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
   APFIL: { id: "1dNmSqSGVNAjQs0en9Xzuzeg2ykBp5Jp8uc1nEyTbc5c", full: "Akij Polyfibre Industries Ltd", tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
@@ -197,6 +197,21 @@ const SHEETS = {
 // N=13 Achievement, O=14 Status
 // ─────────────────────────────────────────────────────────
 const COL = { NAME:7, MEASURE:8, TARGET:11, ACTUAL:12, ACHIEVEMENT:13, STATUS:14 };
+
+// ─────────────────────────────────────────────────────────
+// KPIs to hide from the dashboard (exact name match, case-insensitive)
+// ─────────────────────────────────────────────────────────
+const HIDDEN_KPIS = [
+  "ot",
+  "wages",
+  "kaizen savings",
+  "wastage sell",
+  "manufacturing culture development index"
+];
+
+function isHidden(name) {
+  return HIDDEN_KPIS.includes(name.toLowerCase().trim());
+}
 
 // ─────────────────────────────────────────────────────────
 // Data fetching
@@ -240,6 +255,7 @@ function parseRows(gvizData) {
     if (!row.c || row.c.length < 15) continue;
     const name = cellVal(row.c[COL.NAME]).trim();
     if (!name || name.toLowerCase() === "kpi name" || name.toLowerCase() === "kpi") continue;
+    if (isHidden(name)) continue;
     const statusRaw = cellVal(row.c[COL.STATUS]).trim();
     const status = cleanStatus(statusRaw);
     if (!status) continue;

@@ -109,7 +109,7 @@ tbody tr:hover td{background:#fafaf8}
       <select id="unit-sel" onchange="loadAndRender()">
         <option value="AAFL">AAFL</option>
         <option value="MRML">MRML</option>
-        <option value="AEFML">AEFM</option>
+        <option value="AEFML">AEFML</option>
         <option value="AIL">AIL</option>
         <option value="ACCL">ACCL</option>
         <option value="APFIL">APFIL</option>
@@ -164,7 +164,7 @@ tbody tr:hover td{background:#fafaf8}
   <div class="card">
     <div class="card-head">
       <span class="card-title">Achievement overview</span>
-      <span class="card-note">Capped at 200% &nbsp;·&nbsp; green ≥100% &nbsp;·&nbsp; blue ≥80% &nbsp;·&nbsp; amber ≥50% &nbsp;·&nbsp; red &lt;50%</span>
+      <span class="card-note">Capped at 100% &nbsp;·&nbsp; green ≥100% &nbsp;·&nbsp; blue ≥80% &nbsp;·&nbsp; amber ≥50% &nbsp;·&nbsp; red &lt;50%</span>
     </div>
     <div id="ov-chart">
       <div class="state-box" style="padding:24px"><div class="spinner"></div></div>
@@ -186,7 +186,7 @@ const SHEETS = {
   AAFL:  { id: "1OrM5NnsZXGcvKaqltg0t5ML_cY4-aGPaj9EwJEuxs4Q", full: "Akij Agro Feed Ltd",     tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
   MRML:  { id: "1oFVT9nMTE1EXkDy6IhDRQVuJ9ls7N28byqxXpFnn5TI", full: "Monowara Rice Mill Ltd",   tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
   AEFML: { id: "1aUTyOsjSSBTb9beoqpN5Xu-thRtoNvpnn-AQeHc0U30", full: "Akij Essential Flour Mill Ltd",  tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
-  AIL:   { id: "1Iv0dAUnRN2g0A8oipGPAoU4zFt8mszQJI0e-moC0Mjc", full: "Akij Ispat Ltd",    tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
+  AIL:   { id: "1Iv0dAUnRN2g0A8oipGPAoU4zFt8mszQJI0e-moC0Mjc", full: "Akij IspatLtd",    tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
   ACCL:  { id: "1sxPtwkNHXxrstIqn9Hr-EFtt8yMN6EGLY1_vNSEEWNQ", full: "Akij Cement Company Ltd", tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
   APFIL: { id: "1dNmSqSGVNAjQs0en9Xzuzeg2ykBp5Jp8uc1nEyTbc5c", full: "Akij Polyfibre Industries Ltd", tabs: { "Apr-26": "Apr-26", "May-26": "May-26" } },
 };
@@ -218,7 +218,7 @@ function isHidden(name) {
 // Data fetching
 // ─────────────────────────────────────────────────────────
 function gvizUrl(sheetId, tabName) {
-  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}&headers=1`;
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
 }
 
 function parseGviz(raw) {
@@ -258,26 +258,64 @@ function statusFromPct(p) {
   return "Critical";
 }
 
+function findColIndices(gvizData) {
+  // Dynamically find column positions by matching header labels
+  const cols = gvizData.table && gvizData.table.cols ? gvizData.table.cols : [];
+  const map = {};
+  const targets = {
+    NAME:        ["kpi name"],
+    MEASURE:     ["measure kpi", "measure"],
+    TARGET:      ["kpi target", "target"],
+    ACTUAL:      ["actual"],
+    ACHIEVEMENT: ["kpi achivement", "kpi achievement", "achievement"],
+    STATUS:      ["kpi status", "status"],
+  };
+  cols.forEach((col, i) => {
+    const label = (col.label || "").toLowerCase().trim();
+    for (const [key, options] of Object.entries(targets)) {
+      if (!map[key] && options.some(o => label.includes(o))) {
+        map[key] = i;
+      }
+    }
+  });
+  // Fallback to hardcoded indices if dynamic detection fails
+  return {
+    NAME:        map.NAME        ?? COL.NAME,
+    MEASURE:     map.MEASURE     ?? COL.MEASURE,
+    TARGET:      map.TARGET      ?? COL.TARGET,
+    ACTUAL:      map.ACTUAL      ?? COL.ACTUAL,
+    ACHIEVEMENT: map.ACHIEVEMENT ?? COL.ACHIEVEMENT,
+    STATUS:      map.STATUS      ?? COL.STATUS,
+  };
+}
+
 function parseRows(gvizData) {
   const rows = gvizData.table && gvizData.table.rows ? gvizData.table.rows : [];
+  const idx  = findColIndices(gvizData);
   const result = [];
+
   for (const row of rows) {
-    if (!row.c || row.c.length < 15) continue;
-    const name = cellVal(row.c[COL.NAME]).trim();
-    if (!name || name.toLowerCase() === "kpi name" || name.toLowerCase() === "kpi") continue;
+    if (!row.c || row.c.length < 8) continue;
+
+    const name = cellVal(row.c[idx.NAME] || null).trim();
+    if (!name || ["kpi name","kpi","kpi name"].includes(name.toLowerCase())) continue;
     if (isHidden(name)) continue;
-    const actual = cellVal(row.c[COL.ACTUAL]).trim();
-    const pct    = parsePct(cellVal(row.c[COL.ACHIEVEMENT]).trim());
-    // Skip rows that have no name data or are header rows
-    const statusRaw = cellVal(row.c[COL.STATUS]).trim();
-    if (!pct && !statusRaw && !actual) continue;
-    // Derive status from pct using formula: >=95 Excellent, >=80 Acceptable, >=60 Risk, else Critical
+
+    const actual      = cellVal(row.c[idx.ACTUAL]      || null).trim();
+    const target      = cellVal(row.c[idx.TARGET]      || null).trim();
+    const measure     = cellVal(row.c[idx.MEASURE]     || null).trim();
+    const achRaw      = cellVal(row.c[idx.ACHIEVEMENT] || null).trim();
+    const pct         = parsePct(achRaw);
+
+    // Skip completely empty rows
+    if (!actual && !target && !achRaw) continue;
+
     const status = statusFromPct(pct);
     result.push({
       n: name,
-      m: cellVal(row.c[COL.MEASURE]).trim() || "—",
-      t: cellVal(row.c[COL.TARGET]).trim()  || "—",
-      a: actual || "—",
+      m: measure || "—",
+      t: target  || "—",
+      a: actual  || "—",
       p: pct,
       s: status
     });

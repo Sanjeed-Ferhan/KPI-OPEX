@@ -109,7 +109,7 @@ tbody tr:hover td{background:#fafaf8}
       <select id="unit-sel" onchange="loadAndRender()">
         <option value="AAFL">AAFL</option>
         <option value="MRML">MRML</option>
-        <option value="AEFML">AEFML</option>
+        <option value="AEFML">AEFM</option>
         <option value="AIL">AIL</option>
         <option value="ACCL">ACCL</option>
         <option value="APFIL">APFIL</option>
@@ -249,6 +249,15 @@ function parsePct(str) {
   return isNaN(n) ? 0 : Math.abs(n);
 }
 
+// Derive status from achievement % — mirrors sheet formula:
+// >=95% 🟢 Excellent | >=80% 🟡 Acceptable | >=60% 🔴 Risk | else 🚨 Critical
+function statusFromPct(p) {
+  if (p >= 95) return "Excellent";
+  if (p >= 80) return "Acceptable";
+  if (p >= 60) return "Risk";
+  return "Critical";
+}
+
 function parseRows(gvizData) {
   const rows = gvizData.table && gvizData.table.rows ? gvizData.table.rows : [];
   const result = [];
@@ -257,11 +266,13 @@ function parseRows(gvizData) {
     const name = cellVal(row.c[COL.NAME]).trim();
     if (!name || name.toLowerCase() === "kpi name" || name.toLowerCase() === "kpi") continue;
     if (isHidden(name)) continue;
-    const statusRaw = cellVal(row.c[COL.STATUS]).trim();
-    const status = cleanStatus(statusRaw);
-    if (!status) continue;
     const actual = cellVal(row.c[COL.ACTUAL]).trim();
     const pct    = parsePct(cellVal(row.c[COL.ACHIEVEMENT]).trim());
+    // Skip rows that have no name data or are header rows
+    const statusRaw = cellVal(row.c[COL.STATUS]).trim();
+    if (!pct && !statusRaw && !actual) continue;
+    // Derive status from pct using formula: >=95 Excellent, >=80 Acceptable, >=60 Risk, else Critical
+    const status = statusFromPct(pct);
     result.push({
       n: name,
       m: cellVal(row.c[COL.MEASURE]).trim() || "—",
@@ -295,17 +306,17 @@ async function fetchSheetData(unit, month) {
 // Styling helpers
 // ─────────────────────────────────────────────────────────
 function statusStyle(s) {
-  if (s === "Excellent")  return { c:"#22863a", bg:"#EAF3DE" };
-  if (s === "Acceptable") return { c:"#185FA5", bg:"#E6F1FB" };
-  if (s === "Risk")       return { c:"#854F0B", bg:"#FAEEDA" };
-  return                         { c:"#A32D2D", bg:"#FCEBEB" };
+  if (s === "Excellent")  return { c:"#1a6b2f", bg:"#E6F4D7" };  // 🟢 green
+  if (s === "Acceptable") return { c:"#7a5a00", bg:"#FEF9C3" };  // 🟡 yellow
+  if (s === "Risk")       return { c:"#9b1c1c", bg:"#FEE2E2" };  // 🔴 red
+  return                         { c:"#7c2d12", bg:"#FFF0E0" };  // 🚨 orange-red critical
 }
 
 function barColor(p) {
-  if (p >= 100) return "#22863a";
-  if (p >= 80)  return "#185FA5";
-  if (p >= 50)  return "#EF9F27";
-  return "#E24B4A";
+  if (p >= 95) return "#22863a";  // Excellent
+  if (p >= 80) return "#EAB308";  // Acceptable — yellow
+  if (p >= 60) return "#EF4444";  // Risk — red
+  return "#DC2626";               // Critical — dark red
 }
 
 function fmtPct(p, a) {
